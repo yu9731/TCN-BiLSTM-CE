@@ -137,7 +137,7 @@ def joint_loss(real, fake):
 
 pre_trained_epoch = 100
 
-adversarial_epoch = 100
+adversarial_epoch = 50
 
 memory_usage = []
 time_usage = []
