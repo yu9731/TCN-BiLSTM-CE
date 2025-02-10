@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-data = pd.read_csv('electricity_cleaned.csv', index_col=[0], parse_dates=True)
+data = pd.read_csv('Data/electricity.csv', index_col=[0], parse_dates=True)
 
 train_start_dt = '2016-06-26 00:00:00'
 train_end_dt = '2016-12-30 23:00:00'
@@ -45,8 +45,8 @@ def create_dataset(train_data_time_features, train_data):
     np_day_of_week = np.zeros((train_data_time_features.shape[0], 1))
     np_hour = np.zeros((train_data_time_features.shape[0], 1))
 
-    np_day_of_week = train_data_time_features.loc[:,'DayOfWeek'].values#.reshape((train_data_time_features.shape[0], 1))
-    np_hour = train_data_time_features.loc[:,'hour'].values#.reshape((train_data_time_features.shape[0], 1))
+    np_day_of_week = train_data_time_features.loc[:,'DayOfWeek'].values
+    np_hour = train_data_time_features.loc[:,'hour'].values
     for i in range(np_day_of_week.shape[0]):
         np_day_of_week[i] = np.sin(2 * np.pi * np_day_of_week[i]/7.0)
         np_hour[i] = np.sin(2 * np.pi * np_hour[i]/24.0)
@@ -70,8 +70,8 @@ def create_sequence(np_train, np_test, building):
     :return data_validation: Validation set.
     '''
 
-    np.save(f'TCN_Encoder/Train_Data/Train_TL/min_7m_{building}_train.npy', np.min(np_train[:, 1]))
-    np.save(f'TCN_Encoder/Train_Data/Train_TL/max_7m_{building}_train.npy', np.max(np_train[:, 1]))
+    np.save(f'Data/Train_data/min_7m_{building}_train.npy', np.min(np_train[:, 1]))
+    np.save(f'Data/Train_data/max_7m_{building}_train.npy', np.max(np_train[:, 1]))
 
     for i in range(np_train.shape[1]):
         np_test[:, i] = (np_test[:, i] - np.min(np_train[:, i])) / (np.max(np_train[:, i]) - np.min(np_train[:, i]))
@@ -89,8 +89,8 @@ def create_sequence(np_train, np_test, building):
         for j in range(3):
             data_test[idx, :, j] = np_test[i * 24:(i * 24 + 336), j]
 
-    np.save(f'TCN_Encoder/Train_Data/Train_TL/data_train_7m_{building}.npy', data_train)
-    np.save(f'TCN_Encoder/Train_Data/Train_TL/data_validation_7m_{building}.npy', data_validation)
+    np.save(f'Data/Train_data/data_train_7m_{building}.npy', data_train)
+    np.save(f'Data/Train_data/data_validation_7m_{building}.npy', data_validation)
 
     return data_train, data_validation
 
