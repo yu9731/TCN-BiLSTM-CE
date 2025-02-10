@@ -5,7 +5,6 @@
 #### model_and_training.py: Modeling, compiling and training the TCN-BiLSTM-CE model and saving the trained model
 #### test.py: Validating with test data
 
-### Selected building in this dataset:
+### Due to the data protection requirements of Green Fusion GmbH in Berlin, we can only provide the electrical load data here to make the results of the TCN-BiLSTM-CE reproducible. Selected buildings in the electricity load dataset:
 #### Bear_public_Orville, Bear_public_Rayna, Mouse_health_Ileana, Mouse_health_Estela, Hog_office_Denita, Hog_office_Napoleon, Wolf_retail_Toshia, Panther_retail_Kristina, Panther_parking_Lorriane, Panther_parking_Alaina, Panther_education_Teofila, Panther_education_Jerome
 
-### Due to the data protection requirements of Green Fusion GmbH in Berlin, we can only provide the electrical load data here to make the results of the TCN-BiLSTM-CE reproducible.
