@@ -19,42 +19,34 @@ import keras
 import tracemalloc
 import time
 
-IMAGE_SIZE = 336
-LOCAL_SIZE = 264
-HOLE_MIN = 24
-HOLE_MAX = 240
-BATCH_SIZE = 8
+global_size = 336   # Length of a sample
+local_size = 264    
+hole_max = 240      # Length of missing values
+batch_size = 8
 
-#building_name = ['186','196','243','244','286','290','395']
-building = 'Lorriane'
+building = 'Mouse_health_Estela'
+# Using the building 'Mouse_health_Estela' as an example, you can also using other building for reproducing the result
 
 def build_generator(input_dim, variable_num=3):
     encoder_input = Input(shape=(input_dim, variable_num))
-    x = tf.keras.layers.Conv1D(32, 3, 1, activation='relu', padding='same', name="Encoder_1")(encoder_input)   #64、8、16
-    x = tf.keras.layers.Conv1D(64, 3, 2, activation='relu', padding='same', name="Encoder_2")(x)    #128、16、32
-    x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Encoder_3")(x)    #256、32、64
-    x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Encoder_4")(x)    #256
+    x = tf.keras.layers.Conv1D(32, 3, 1, activation='relu', padding='same', name="Encoder_1")(encoder_input)
+    x = tf.keras.layers.Conv1D(64, 3, 2, activation='relu', padding='same', name="Encoder_2")(x)
+    x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Encoder_3")(x)
+    x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Encoder_4")(x)
     x = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Encoder_5")(x)
     x = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Encoder_6")(x)
 
-    x = Bidirectional(LSTM(64, return_sequences=True))(x)  # 128/256
-    x = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_1")(x)  # [1,6,11,23], [1,2,4,8]
-    x = Bidirectional(LSTM(64, return_sequences=True))(x)  # 128/256
-    x = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_2")(x)  # [1,6,11,23], [1,2,4,8]
-    x = Bidirectional(LSTM(64, return_sequences=True))(x)  # 128/256
-    encoded = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_3")(x)  # [1,6,11,23], [1,2,4,8]
-    
-    #x = tf.keras.layers.Conv1D(128, 3, 1, dilation_rate=2, padding='same', name="dilated_1")(x)
-    #x = tf.keras.layers.Conv1D(128, 3, 1, dilation_rate=4, padding='same', name="dilated_2")(x)
-    #encoded = tf.keras.layers.Conv1D(128, 3, 1, dilation_rate=8, padding='same', name="dilated_3")(x)
+    x = Bidirectional(LSTM(64, return_sequences=True))(x)
+    x = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_1")(x)
+    x = Bidirectional(LSTM(64, return_sequences=True))(x)
+    encoded = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_3")(x)
 
     decoder_layer_1 = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Decoder_1")(encoded)
     x = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Decoder_2")(decoder_layer_1)
-    x = tf.keras.layers.Conv1DTranspose(128, 3, 2, activation='relu', padding='same', name="Decoder_3")(x)     #(x) , activation='relu'
-    x = tf.keras.layers.Conv1DTranspose(64, 3, 2, activation='relu', padding='same', name="Decoder_4")(x)   #2
+    x = tf.keras.layers.Conv1DTranspose(128, 3, 2, activation='relu', padding='same', name="Decoder_3")(x)
+    x = tf.keras.layers.Conv1DTranspose(64, 3, 2, activation='relu', padding='same', name="Decoder_4")(x)
     x = tf.keras.layers.Conv1DTranspose(32, 3, 2, activation='relu', padding='same', name="Decoder_5")(x)
     decoder_output = tf.keras.layers.Conv1D(variable_num, 3, 1, activation='relu', padding='same', name="Decoder_Output")(x)
-    #decoder_output = tf.keras.activations.tanh(x)
 
     generator = models.Model(encoder_input, decoder_output)
     return generator
@@ -63,7 +55,7 @@ generator = build_generator(336,3)
 generator.summary()
 
 #def discriminator(global_x, local_x):
-def discriminator(input_dim_global=336, input_dim_local=264, variable_num=3):
+def discriminator(input_dim_global=336, input_dim_local=240, variable_num=3):
     '''
     Discriminator get the output of the real and fake seperately and then using them to calculate the joint loss
     '''
@@ -79,7 +71,7 @@ def discriminator(input_dim_global=336, input_dim_local=264, variable_num=3):
 
         flatten_layer = tf.keras.layers.Flatten()
         result = flatten_layer(x)
-        result = tf.keras.layers.Dense(1024)(result)     #1024
+        result = tf.keras.layers.Dense(1024)(result)
 
         return result
 
@@ -92,7 +84,7 @@ def discriminator(input_dim_global=336, input_dim_local=264, variable_num=3):
 
         flatten_layer = tf.keras.layers.Flatten()
         result = flatten_layer(x)
-        result = tf.keras.layers.Dense(1024)(result)      #1024
+        result = tf.keras.layers.Dense(1024)(result)
 
         return result
 
@@ -106,21 +98,23 @@ def discriminator(input_dim_global=336, input_dim_local=264, variable_num=3):
     return model
 
 def get_points():
+    '''
+    Randomly creating missing values in training samples for training the model. 
+    Manually create data samples with up to 10 days of missing data, starting at a random point in time series data.
+    '''
     points = []
     mask = []
-    for i in range(BATCH_SIZE):
-        #x1 = IMAGE_SIZE - LOCAL_SIZE - 48
-        #x2 = x1 + LOCAL_SIZE
+    for i in range():
         x1 = np.random.randint(0,71,1,'int')[0]
-        x2 = x1 + LOCAL_SIZE
+        x2 = x1 + local_size
 
         points.append([x1, x2])
 
-        w = HOLE_MAX
-        p1 = x1 + (LOCAL_SIZE - w)
+        w = hole_max
+        p1 = x1 + (local_size - w)
         p2 = p1 + w
 
-        m = np.zeros((IMAGE_SIZE, 3), dtype=np.uint8)
+        m = np.zeros((global_size, 3), dtype=np.uint8)
         m[p1:p2+1, -2] = 1
         mask.append(m)
     return np.array(points), np.array(mask)
@@ -150,39 +144,38 @@ adversarial_epoch = 100
 memory_usage = []
 time_usage = []
 
-x_train = np.load(f'Train_Data/Train_Elec/data_train_7m_{building}_.npy')
-print(f'{building}')
+x_train = np.load(f'Data/Train_Data/data_train_7m_{building}.npy')
 
 tracemalloc.start()
 t0 = time.time()
 for epoch in range(pre_trained_epoch+1):
     np.random.shuffle(x_train)
-    step_num = int(len(x_train) * 0.8 / BATCH_SIZE)
+    step_num = int(len(x_train) * 0.8 / )
     for i in tqdm.tqdm(range(step_num)):
-        x_batch = x_train[0:int(len(x_train) * 0.8)][i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
+        x_batch = x_train[0:int(len(x_train) * 0.8)][i * :(i + 1) * batch_size]
         points_batch, mask_batch = get_points()
 
         generator_input = x_batch * (1 - mask_batch)
         loss = generator.train_on_batch(generator_input, x_batch)
 
-    x_batch_test = x_train[int(len(x_train) * 0.8):][:BATCH_SIZE]
+    x_batch_test = x_train[int(len(x_train) * 0.8):][:batch_size]
     points_batch_test, mask_batch_test = get_points()
     generator_test_input = x_batch_test * (1 - mask_batch_test)
     test_loss = generator.evaluate(generator_test_input, x_batch_test)
 
     if epoch % 10 == 0:
         print(f"Autoencoder Pretrain Epoch [{epoch}/{pre_trained_epoch}] | Loss: {loss}| Test Loss: {test_loss}")
-        generator.save(f'TL_Model/Model_elec/{building}/generator_{building}.h5')
+        generator.save(f'TL_Model/{building}/generator_{building}.h5')
 
-generator = load_model(f'TL_Model/Model_elec/{building}/generator_{building}.h5', custom_objects={"TCN": TCN})
+generator = load_model(f'TL_Model/{building}/generator_{building}.h5', custom_objects={"TCN": TCN})
 
 optimizer_D = tf.keras.optimizers.Adam(0.0005)
 
 for epoch in range(adversarial_epoch+1):
     np.random.shuffle(x_train)
-    step_num = int(len(x_train) * 0.8 / BATCH_SIZE)
+    step_num = int(len(x_train) * 0.8 / batch_size)
     for i in range(step_num):
-        x_batch = x_train[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
+        x_batch = x_train[i * batch_size:(i + 1) * batch_size]
         points_batch, mask_batch = get_points()
         generator_input = x_batch * (1 - mask_batch)
 
@@ -191,7 +184,7 @@ for epoch in range(adversarial_epoch+1):
 
         local_x_batch = []
         local_completion_batch = []
-        for i in range(BATCH_SIZE):
+        for i in range(batch_size):
             x1, x2 = points_batch[:, 0][0], points_batch[:, 1][0]
             local_x_batch.append(x_batch[i][x1:x2, :])
             local_completion_batch.append(completion[i][x1:x2, :])
@@ -209,7 +202,7 @@ for epoch in range(adversarial_epoch+1):
         optimizer_D.apply_gradients(zip(gradients, discriminator.trainable_variables))
 
         # Test Discriminator
-        x_batch_test = x_train[int(len(x_train) * 0.8):][:BATCH_SIZE]
+        x_batch_test = x_train[int(len(x_train) * 0.8):][:batch_size]
         points_batch_test, mask_batch_test = get_points()
         generator_test_input = x_batch_test * (1 - mask_batch_test)
 
@@ -218,7 +211,7 @@ for epoch in range(adversarial_epoch+1):
 
         local_x_batch_test = []
         local_completion_batch_test = []
-        for i in range(BATCH_SIZE):
+        for i in range(batch_size):
             x1, x2 = points_batch[:, 0][0], points_batch[:, 1][0]
             local_x_batch_test.append(x_batch_test[i][x1:x2, :])
             local_completion_batch_test.append(test_completion[i][x1:x2, :])
@@ -236,7 +229,7 @@ for epoch in range(adversarial_epoch+1):
         g_loss = generator.train_on_batch(generator_input, x_batch)
 
         # Test Generator
-        x_batch_test = x_train[int(len(x_train) * 0.8):][:BATCH_SIZE]
+        x_batch_test = x_train[int(len(x_train) * 0.8):][:batch_size]
         points_batch_test, mask_batch_test = get_points()
         generator_test_input = x_batch_test * (1 - mask_batch_test)
         g_test_loss = generator.evaluate(generator_test_input, x_batch_test)
