@@ -38,7 +38,7 @@ def build_generator(input_dim, variable_num=3):
     x = Bidirectional(LSTM(64, return_sequences=True))(x)
     x = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_1")(x)
     x = Bidirectional(LSTM(64, return_sequences=True))(x)
-    encoded = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_3")(x)
+    encoded = TCN(128, 3, 1, dilations=[1, 2, 4, 8], return_sequences=True, padding='causal', name="TCN_2")(x)
 
     decoder_layer_1 = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Decoder_1")(encoded)
     x = tf.keras.layers.Conv1D(128, 3, 1, activation='relu', padding='same', name="Decoder_2")(decoder_layer_1)
@@ -66,7 +66,6 @@ def discriminator(input_dim_global=336, input_dim_local=240, variable_num=3):
         x = tf.keras.layers.Conv1D(32, 3, 2, activation='relu', padding='same', name="Global_Discriminator_2")(x)
         x = tf.keras.layers.Conv1D(64, 3, 2, activation='relu', padding='same', name="Global_Discriminator_3")(x)
         x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Global_Discriminator_4")(x)
-        # x = tf.keras.layers.Conv1D(512, 5, 2, activation='relu', padding='same', name="Global_Discriminator_5")(x)
 
         flatten_layer = tf.keras.layers.Flatten()
         result = flatten_layer(x)
@@ -79,7 +78,6 @@ def discriminator(input_dim_global=336, input_dim_local=240, variable_num=3):
         x = tf.keras.layers.Conv1D(32, 3, 2, activation='relu', padding='same', name="Local_Discriminator_2")(x)
         x = tf.keras.layers.Conv1D(64, 3, 2, activation='relu', padding='same', name="Local_Discriminator_3")(x)
         x = tf.keras.layers.Conv1D(128, 3, 2, activation='relu', padding='same', name="Local_Discriminator_4")(x)
-        #x = tf.keras.layers.Conv1D(512, 5, 2, activation='relu', padding='same', name="Local_Discriminator_5")(x)
 
         flatten_layer = tf.keras.layers.Flatten()
         result = flatten_layer(x)
