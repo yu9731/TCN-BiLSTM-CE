@@ -163,6 +163,7 @@ for epoch in range(pre_trained_epoch+1):
 
     if epoch % 10 == 0:
         print(f"Autoencoder Pretrain Epoch [{epoch}/{pre_trained_epoch}] | Loss: {loss}| Test Loss: {test_loss}")
+    if epoch % 100 == 0:
         generator.save(f'Model/{building}/generator_{building}.h5')
 
 generator = load_model(f'Model/{building}/generator_{building}.h5', custom_objects={"TCN": TCN})
@@ -234,7 +235,8 @@ for epoch in range(adversarial_epoch+1):
 
     if epoch % 10 == 0:
         print(f"Epoch [{epoch}/{adversarial_epoch}] | D Loss: {d_loss} | G Loss: {g_loss}| D Test Loss: {d_test_loss} | G Test Loss: {g_test_loss}")
-        generator.save(f'Model/{building}/generator_{building}_after_discriminator_{epoch}.h5')
+    if epoch % 100 == 0:
+        generator.save(f'Model/{building}/generator_{building}_after_discriminator.h5')
 print("Memory usage:", tracemalloc.get_traced_memory())
 memory_usage.append(tracemalloc.get_traced_memory())
 print("Training time:", time.time() - t0)
