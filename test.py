@@ -5,21 +5,20 @@ from tcn import TCN
 import tensorflow as tf
 
 def test(building, day):
-    generator = load_model(f'TL_Model/Model_elec/{building}/generator_{building}_after_discriminator_100.h5', custom_objects={"TCN": TCN})
+    generator = load_model(f'Model/{building}/generator_{building}_after_discriminator.h5', custom_objects={"TCN": TCN})
     generator.summary()
-    x_test = np.load(f'Train_Data/Train_TL/data_validation_7m_{building}.npy')
+    x_test = np.load(f'Data/Train_Data/data_validation_7m_{building}.npy')
 
     step_num = int(len(x_test) / BATCH_SIZE)
 
-    min_train = np.load(f'Train_Data/Train_TL/min_7m_{building}_train.npy')
-    max_train = np.load(f'Train_Data/Train_TL/max_7m_{building}_train.npy')
+    min_train = np.load(f'Data/Train_Data/min_7m_{building}_train.npy')
+    max_train = np.load(f'Data/Train_Data/max_7m_{building}_train.npy')
 
     cnt = 0
     np_nrmse = np.zeros((step_num,1))
     _, mask_batch = get_points()
     for i in range(step_num):
-        x_batch = x_test[i * BATCH_SIZE:(i + 1) * BATCH_SIZE]
-        # _, mask_batch = get_points()
+        x_batch = x_test[i * batch_size:(i + 1) * batch_size]
 
         generator_input = x_batch * (1 - mask_batch)
         generator_output = generator.predict(generator_input)
@@ -48,27 +47,22 @@ def test(building, day):
             np_nrmse[i] = nrmse
     print(np_nrmse)
 
-IMAGE_SIZE = 336
-LOCAL_SIZE = 264
-# LOCAL_SIZE = 24 * (missing_day + 1), in this example, missing_day=10
-HOLE = 240
-# HOLE = 24 * missing_day, in this example, missing_day=10
-BATCH_SIZE = 1
-
+global_size = 336
+local_size = 240
+batch_size = 1
 
 def get_points():
     points = []
     mask = []
-    for i in range(BATCH_SIZE):
-        x1 = IMAGE_SIZE - LOCAL_SIZE - 48
-        x2 = x1 + LOCAL_SIZE
+    for i in range(batch_size):
+        x1 = global_size - local_size - 48
+        x2 = x1 + local_size
         points.append([x1, x2])
 
-        w = HOLE
-        p1 = x1 + (LOCAL_SIZE - w)
-        p2 = p1 + w
+        p1 = x1
+        p2 = p1 + local_size
 
-        m = np.zeros((IMAGE_SIZE, 3), dtype=np.uint8)
+        m = np.zeros((global_size, 3), dtype=np.uint8)
         m[p1:p2+1, 1] = 1
         mask.append(m)
     return np.array(points), np.array(mask)
@@ -78,8 +72,8 @@ Testing for discrete missing values
 def get_points():
     mask = []
     points = np.random.choice(336,270, False)
-    for i in range(BATCH_SIZE):
-        m = np.zeros((IMAGE_SIZE, 3), dtype=np.uint8)
+    for i in range(batch_size):
+        m = np.zeros((global_size, 3), dtype=np.uint8)
         for j in range(len(points)):
             m[points[j], 1] = 1
         mask.append(m)
