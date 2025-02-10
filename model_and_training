@@ -20,8 +20,7 @@ import tracemalloc
 import time
 
 global_size = 336   # Length of a sample
-local_size = 264    
-hole_max = 240      # Length of missing values
+local_size = 240      # Length of missing values
 batch_size = 8
 
 building = 'Mouse_health_Estela'
@@ -105,14 +104,13 @@ def get_points():
     points = []
     mask = []
     for i in range():
-        x1 = np.random.randint(0,71,1,'int')[0]
+        x1 = np.random.randint(0,95,1,'int')[0]
         x2 = x1 + local_size
 
         points.append([x1, x2])
 
-        w = hole_max
-        p1 = x1 + (local_size - w)
-        p2 = p1 + w
+        p1 = x1
+        p2 = p1 + local_size
 
         m = np.zeros((global_size, 3), dtype=np.uint8)
         m[p1:p2+1, -2] = 1
