@@ -69,6 +69,7 @@ def create_sequence(np_train, np_test, building):
     :return data_train: Training set.
     :return data_validation: Validation set.
     '''
+
     np.save(f'TCN_Encoder/Train_Data/Train_TL/min_7m_{building}_train.npy', np.min(np_train[:, 1]))
     np.save(f'TCN_Encoder/Train_Data/Train_TL/max_7m_{building}_train.npy', np.max(np_train[:, 1]))
 
