@@ -9,6 +9,8 @@ train_end_dt = '2016-12-30 23:00:00'
 test_start_dt = '2017-07-03 00:00:00'
 test_end_dt = '2017-07-26 23:00:00'
 
+building_name = 'Mouse_health_Estela'
+
 def pd_time_information(Timestamp):
     '''
     Exracting all the temporal information that we need to consider
@@ -18,11 +20,9 @@ def pd_time_information(Timestamp):
     pd_time_information = pd.DataFrame(columns=['DayOfWeek','hour'])
     for i in range(len(Timestamp)):
         day_of_week = pd.Timestamp(Timestamp[i]).dayofweek + 1
-        # day_of_month = int(str(pd.Timestamp(Timestamp[i]))[8:10])
         hour = int(str(pd.Timestamp(Timestamp[i]))[11:13])
         pd_time_information.loc[i] = [day_of_week, hour]
     return pd_time_information
-
 
 def filtering_by_hours(train_data, pd_time, Timestamp, save_file=False):
     '''
@@ -46,31 +46,26 @@ def filtering_by_hours(train_data, pd_time, Timestamp, save_file=False):
                 pass
             else:
                 outlier_index = pd_time[pd_time['hour'] == hour]['Energy [KW]'].index[j]
-                print(outlier_index)
                 pd_time.loc[outlier_index, 'Energy [KW]'] = np.percentile(energy_demand, 50)
 
     return pd_time
 
+train_data_time_features = pd_time_information(data.loc[train_start_dt:train_end_dt, f'{building_name}'].index)
+test_data_time_features = pd_time_information(data.loc[test_start_dt:test_end_dt, f'{building_name}'].index)
 
-train_data_time_features = pd_time_information(data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
-validation_data_time_features = pd_time_information(data.loc[validation_start_dt:validation_end_dt, 'Wolf_retail_Toshia'].index)
-
-train_data = data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia']
-train_data = train_data.resample('60min').mean().interpolate('linear')
+train_data = data.loc[train_start_dt:train_end_dt, f'{building_name}'].astype('float32')
+train_data = train_data.resample('60min').interpolate('linear').to_frame()
 train_data = train_data.values
 
-pd_train_data = filtering_by_hours(train_data, train_data_time_features, data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
+pd_train_data = filtering_by_hours(train_data, train_data_time_features, data.loc[train_start_dt:train_end_dt, f'{building_name}'].index)
 train_data = pd_train_data['Energy [KW]'].values
 train_data = train_data.reshape((len(train_data),1))
 
-test_data = data.loc[validation_start_dt:validation_end_dt, 'Wolf_retail_Toshia']
-test_data = test_data.resample('60min').mean().interpolate('linear')      
+test_data = data.loc[test_start_dt:test_end_dt, f'{building_name}'].astype('float32')
+test_data = test_data.resample('60min').interpolate('linear').to_frame()
 # Interpolating all the missing values in training set
 test_data = test_data.values
 test_data = test_data.reshape((len(test_data),1))
-
-train_data_time_features = pd_time_information(data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
-test_data_time_features = pd_time_information(data.loc[test_start_dt:test_end_dt, 'Wolf_retail_Toshia'].index)
 
 def create_dataset(train_data_time_features, train_data):
     '''
@@ -82,11 +77,12 @@ def create_dataset(train_data_time_features, train_data):
     np_day_of_week = np.zeros((train_data_time_features.shape[0], 1))
     np_hour = np.zeros((train_data_time_features.shape[0], 1))
 
-    np_day_of_week = train_data_time_features.loc[:,'DayOfWeek'].values
-    np_hour = train_data_time_features.loc[:,'hour'].values
+    day_of_week = train_data_time_features.loc[:,'DayOfWeek'].values
+    hour = train_data_time_features.loc[:,'hour'].values
+
     for i in range(np_day_of_week.shape[0]):
-        np_day_of_week[i] = np.sin(2 * np.pi * np_day_of_week[i]/7.0)
-        np_hour[i] = np.sin(2 * np.pi * np_hour[i]/24.0)
+        np_day_of_week[i] = np.sin(2 * np.pi * day_of_week[i]/7.0)
+        np_hour[i] = np.sin(2 * np.pi * hour[i]/24.0)
 
     np_day_of_week = np_day_of_week.reshape((np_day_of_week.shape[0], 1))
     np_hour = np_hour.reshape((np_hour.shape[0], 1))
@@ -127,8 +123,8 @@ def create_sequence(np_train, np_test, building):
             data_test[idx, :, j] = np_test[i * 24:(i * 24 + 336), j]
 
     np.save(f'Data/Train_data/data_train_7m_{building}.npy', data_train)
-    np.save(f'Data/Train_data/data_validation_7m_{building}.npy', data_validation)
+    np.save(f'Data/Train_data/data_validation_7m_{building}.npy', data_test)
 
-    return data_train, data_validation
+    return data_train, data_test
 
-data_train, data_test = create_sequence(np_train, np_test)
+data_train, data_test = create_sequence(np_train, np_test, building_name)
