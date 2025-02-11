@@ -23,14 +23,51 @@ def pd_time_information(Timestamp):
         pd_time_information.loc[i] = [day_of_week, hour]
     return pd_time_information
 
-train_data = data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].values
+
+def filtering_by_hours(train_data, pd_time, Timestamp, save_file=False):
+    '''
+    Filtering outliers in measured data by the correlation between heat demand and specific hours
+    :param df: Dataframe after data pre-processing
+    '''
+    pd_time_information_index = pd.to_datetime(Timestamp)
+    pd_time_information.index = pd_time_information_index
+    pd_time['Energy [KW]'] = train_data
+
+    for i in range(24):
+        hour = i
+        energy_demand = pd_time[pd_time['hour'] == hour]['Energy [KW]'].values
+        energy_demand_25 = np.percentile(energy_demand, 25)
+        energy_demand_75 = np.percentile(energy_demand, 75)
+        energy_demand_median = np.percentile(energy_demand, 50)
+        lower_bound = energy_demand_25 - 1.5 * (energy_demand_75 - energy_demand_25)
+        upper_bound = energy_demand_75 + 1.5 * (energy_demand_75 - energy_demand_25)
+        for j in range(len(energy_demand)):
+            if (lower_bound <= energy_demand[j] <= upper_bound) or np.isnan(energy_demand[j]):
+                pass
+            else:
+                outlier_index = pd_time[pd_time['hour'] == hour]['Energy [KW]'].index[j]
+                print(outlier_index)
+                pd_time.loc[outlier_index, 'Energy [KW]'] = np.percentile(energy_demand, 50)
+
+    return pd_time
+
+
+train_data_time_features = pd_time_information(data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
+validation_data_time_features = pd_time_information(data.loc[validation_start_dt:validation_end_dt, 'Wolf_retail_Toshia'].index)
+
+train_data = data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia']
+train_data = train_data.resample('60min').mean().interpolate('linear')
+train_data = train_data.values
+
+pd_train_data = filtering_by_hours(train_data, train_data_time_features, data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
+train_data = pd_train_data['Energy [KW]'].values
 train_data = train_data.reshape((len(train_data),1))
 
 test_data = data.loc[validation_start_dt:validation_end_dt, 'Wolf_retail_Toshia']
 test_data = test_data.resample('60min').mean().interpolate('linear')      
 # Interpolating all the missing values in training set
 test_data = test_data.values
-test_data = test_data.reshape((len(validation_data),1))
+test_data = test_data.reshape((len(test_data),1))
 
 train_data_time_features = pd_time_information(data.loc[train_start_dt:train_end_dt, 'Wolf_retail_Toshia'].index)
 test_data_time_features = pd_time_information(data.loc[test_start_dt:test_end_dt, 'Wolf_retail_Toshia'].index)
