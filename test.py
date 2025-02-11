@@ -81,5 +81,5 @@ def get_points():
     return np.array(points), np.array(mask)
 '''
 
-building_name = 'Panther_retail_Kristina'
+building_name = 'Mouse_health_Estela'
 test(building_name)
