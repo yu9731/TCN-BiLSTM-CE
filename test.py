@@ -4,12 +4,12 @@ from matplotlib import pyplot as plt
 from tcn import TCN
 import tensorflow as tf
 
-def test(building, day):
+def test(building):
     generator = load_model(f'Model/{building}/generator_{building}_after_discriminator.h5', custom_objects={"TCN": TCN})
     generator.summary()
     x_test = np.load(f'Data/Train_Data/data_validation_7m_{building}.npy')
 
-    step_num = int(len(x_test) / BATCH_SIZE)
+    step_num = int(len(x_test) / batch_size)
 
     min_train = np.load(f'Data/Train_Data/min_7m_{building}_train.npy')
     max_train = np.load(f'Data/Train_Data/max_7m_{building}_train.npy')
@@ -24,7 +24,7 @@ def test(building, day):
         generator_output = generator.predict(generator_input)
         completion = generator_output * mask_batch + generator_input * (1 - mask_batch)
 
-        for j in range(BATCH_SIZE):
+        for j in range(batch_size):
             cnt += 1
             raw = x_batch[j]
             masked = raw * (1 - mask_batch[j]) + np.ones_like(raw) * mask_batch[j] * 0
@@ -45,7 +45,7 @@ def test(building, day):
 
             nrmse = np.sqrt(np.mean(np.square(imputation[48:288,1] - raw[48:288,1]))) / (max_train-min_train)
             np_nrmse[i] = nrmse
-    print(np_nrmse)
+    print(np_nrmse, np.mean(np_nrmse))
 
 global_size = 336
 local_size = 240
@@ -56,6 +56,7 @@ def get_points():
     mask = []
     for i in range(batch_size):
         x1 = global_size - local_size - 48
+        # x1: start point of the continuos missing, in this case: 48 -> 336 - 240 (local_size) - 48 = 48
         x2 = x1 + local_size
         points.append([x1, x2])
 
@@ -68,7 +69,7 @@ def get_points():
     return np.array(points), np.array(mask)
 
 '''
-Testing for discrete missing values
+# Testing for discrete missing values
 def get_points():
     mask = []
     points = np.random.choice(336,270, False)
@@ -80,6 +81,5 @@ def get_points():
     return np.array(points), np.array(mask)
 '''
 
-building_name = ['Estela']
-for i, building in enumerate(building_name):
-    test(building, '10d')
+building_name = 'Panther_retail_Kristina'
+test(building_name)
