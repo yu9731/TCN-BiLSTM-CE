@@ -53,7 +53,6 @@ def build_generator(input_dim, variable_num=3):
 generator = build_generator(336,3)
 generator.summary()
 
-#def discriminator(global_x, local_x):
 def discriminator(input_dim_global=336, input_dim_local=240, variable_num=3):
     '''
     Discriminator get the output of the real and fake seperately and then using them to calculate the joint loss
@@ -101,7 +100,7 @@ def get_points():
     '''
     points = []
     mask = []
-    for i in range():
+    for i in range(batch_size):
         x1 = np.random.randint(0,95,1,'int')[0]
         x2 = x1 + local_size
 
@@ -146,9 +145,9 @@ tracemalloc.start()
 t0 = time.time()
 for epoch in range(pre_trained_epoch+1):
     np.random.shuffle(x_train)
-    step_num = int(len(x_train) * 0.8 / )
+    step_num = int(len(x_train) * 0.8 / batch_size)
     for i in tqdm.tqdm(range(step_num)):
-        x_batch = x_train[0:int(len(x_train) * 0.8)][i * :(i + 1) * batch_size]
+        x_batch = x_train[0:int(len(x_train) * 0.8)][i * batch_size:(i + 1) * batch_size]
         points_batch, mask_batch = get_points()
 
         generator_input = x_batch * (1 - mask_batch)
@@ -161,9 +160,8 @@ for epoch in range(pre_trained_epoch+1):
 
     if epoch % 10 == 0:
         print(f"Autoencoder Pretrain Epoch [{epoch}/{pre_trained_epoch}] | Loss: {loss}| Test Loss: {test_loss}")
-    if epoch % 100 == 0:
-        generator.save(f'Model/{building}/generator_{building}.h5')
 
+generator.save(f'Model/{building}/generator_{building}.h5')
 generator = load_model(f'Model/{building}/generator_{building}.h5', custom_objects={"TCN": TCN})
 
 optimizer_D = tf.keras.optimizers.Adam(0.0005)
@@ -233,13 +231,17 @@ for epoch in range(adversarial_epoch+1):
 
     if epoch % 10 == 0:
         print(f"Epoch [{epoch}/{adversarial_epoch}] | D Loss: {d_loss} | G Loss: {g_loss}| D Test Loss: {d_test_loss} | G Test Loss: {g_test_loss}")
-    if epoch % 100 == 0:
-        generator.save(f'Model/{building}/generator_{building}_after_discriminator.h5')
+
+generator.save(f'Model/{building}/generator_{building}_after_discriminator.h5')
+
+'''
+# Figuring out the memory usage
 print("Memory usage:", tracemalloc.get_traced_memory())
 memory_usage.append(tracemalloc.get_traced_memory())
 print("Training time:", time.time() - t0)
 time_usage.append(time.time() - t0)
 tracemalloc.stop()
 
-np.save('Result_visualization/memory_usage_elec.npy', np.array(memory_usage))
-np.save('Result_visualization/time_usage_elec.npy', np.array(time_usage))
+np.save('memory_usage_elec.npy', np.array(memory_usage))
+np.save('time_usage_elec.npy', np.array(time_usage))
+'''
