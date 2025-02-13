@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-data = pd.read_csv('Data/electricity.csv', index_col=[0], parse_dates=True)
+data = pd.read_csv('Data/electricity_cleaned.csv', index_col=[0], parse_dates=True)
 
 train_start_dt = '2016-06-26 00:00:00'
 train_end_dt = '2016-12-30 23:00:00'
