@@ -9,6 +9,7 @@
 
 #### The data provided here for reproducing the results are electrical load data. Due to the data protection requirements of Green Fusion GmbH in Berlin, we can only provide the electrical load data here to make the results of the TCN-BiLSTM-CE reproducible.
 #### URL for accessing the electricity dataset: https://github.com/buds-lab/building-data-genome-project-2/tree/master/data/meters/cleaned, here the author used the dataset called 'electricity_cleaned.csv'
+#### Once you download the data from this github repo, put it under folder 'Data'. 'Data/Train_data' is used for saving the training and testing data after pre-processing and normalizing with load_data.py
 #### Selected buildings in the electricity load dataset:
 #### Robin_public_Carolina, Bear_public_Rayna, Mouse_health_Ileana, Mouse_health_Estela, Hog_office_Denita, Hog_office_Napoleon, Wolf_retail_Toshia, Panther_retail_Kristina, Panther_parking_Lorriane, Panther_parking_Alaina, Panther_education_Teofila, Panther_education_Jerome
 
